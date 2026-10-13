@@ -1,15 +1,55 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Lecture-Alert-PWA</title>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Lecture Alert</title>
   <link rel="stylesheet" href="style.css">
 </head>
 <body>
+  <h1>Lecture Alert</h1>
+  <button id="enable-notifications" type="button">Enable notifications</button>
+  <p id="notif-status"></p>
 
-  <h1>Hello, world!</h1>
+  <div id="alert-banner" hidden></div>
 
+  <form id="lecture-form">
+    <label for="course">Course</label>
+    <input id="course" type="text" required>
+
+    <label for="day">Day</label>
+    <select id="day">
+      <option value="0">Sunday</option>
+      <option value="1">Monday</option>
+      <option value="2">Tuesday</option>
+      <option value="3">Wednesday</option>
+      <option value="4">Thursday</option>
+      <option value="5">Friday</option>
+      <option value="6">Saturday</option>
+    </select>
+
+    <label for="time">Start time</label>
+    <input id="time" type="time" required>
+
+    <label for="hall">Hall</label>
+    <select id="hall" name="hall">
+    <option value="">Select hall</option>
+    </select>
+
+    <label for="room">Room</label>
+    <input id="room" type="text">
+
+    <button type="submit">Add lecture</button>
+  </form>
+
+  <h2>My lectures</h2>
+  <ul id="lecture-list"></ul>
+
+  <button id="clear-all" type="button">Clear all lectures</button>
+
+  <script src="time.js" defer></script>
+  <script src="time.test.js" defer></script>
   <script src="app.js" defer></script>
+
 </body>
 </html>

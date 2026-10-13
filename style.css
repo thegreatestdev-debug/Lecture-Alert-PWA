@@ -1,0 +1,8 @@
+#alert-banner {
+  background: #ffe08a;
+  border: 2px solid #c79100;
+  padding: 12px;
+  margin: 12px 0;
+  font-weight: bold;
+  cursor: pointer;
+}
