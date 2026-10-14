@@ -1,3 +1,5 @@
+import { getNextOccurrence } from "./time.js";
+
 function check(name, lecture, now, expected) {
   const got = getNextOccurrence(lecture, now);
   const pass = got !== null && got.getTime() === expected.getTime();

@@ -1,3 +1,5 @@
+import { getNextOccurrence } from "./time.js";
+
 console.log("app.js loaded");
 
 // ─────────────────────────────────────────────
@@ -113,17 +115,20 @@ form.addEventListener("submit", (event) => {
     room,
   });
 
-  //delete button
-  document.getElementById("clear-all").addEventListener("click", () => {
+  saveLectures(lectures);
+  render();
+  form.reset();
+});
+
+
+// ─────────────────────────────────────────────
+// Clear all lectures button (single listener, once)
+// ─────────────────────────────────────────────
+document.getElementById("clear-all").addEventListener("click", () => {
   if (!confirm("Delete all lectures?")) return;
   lectures = [];
   saveLectures(lectures);
   render();
-});
-
-  saveLectures(lectures);
-  render();
-  form.reset();
 });
 
 // ─────────────────────────────────────────────
@@ -131,12 +136,17 @@ form.addEventListener("submit", (event) => {
 // ─────────────────────────────────────────────
 populateHallSelect();
 render();
-
+// ===== Alerts and notifications =====
 const LEAD_MINUTES = 1;            // demo value; raise it later
 const CHECK_EVERY_MS = 1000;
 const FIRED_KEY = "firedAlerts";
 
 const banner = document.getElementById("alert-banner");
+const enableBtn = document.getElementById("enable-notifications");
+const notifStatus = document.getElementById("notif-status");
+const lecture = document.getElementById("lecture-form");
+const list = document.getElementById("lecture-list");
+
 
 function loadFired() {
   try {
@@ -152,6 +162,18 @@ function saveFired(set) {
 }
 
 const fired = loadFired();
+
+async function sendNotification(title, body, tag) {
+  if (typeof Notification === "undefined" ||
+      !("serviceWorker" in navigator) ||
+      Notification.permission !== "granted") return;
+  try {
+    const reg = await navigator.serviceWorker.ready;
+    await reg.showNotification(title, { body, tag });
+  } catch (err) {
+    console.error("Notification failed:", err);
+  }
+}
 
 function showAlert(lecture, start, key) {
   const hall = HALLS.find((h) => h.id === lecture.hall);
@@ -179,22 +201,9 @@ function checkAlerts() {
       saveFired(fired);
       console.log("ALERT fired:", lecture.course,
                   "| start", start.toTimeString(), "| now", now.toTimeString());
-      showAlert(lecture, start);
+      showAlert(lecture, start, key);
     }
   }
-}
-
-banner.addEventListener("click", () => { banner.hidden = true; });
-setInterval(checkAlerts, CHECK_EVERY_MS);
-checkAlerts();
-
-const enableBtn = document.getElementById("enable-notifications");
-const notifStatus = document.getElementById("notif-status");
-
-if ("serviceWorker" in navigator) {
-  navigator.serviceWorker.register("sw.js").catch((err) => {
-    console.error("Service worker registration failed:", err);
-  });
 }
 
 function updateNotifStatus() {
@@ -218,16 +227,32 @@ enableBtn.addEventListener("click", async () => {
   updateNotifStatus();
 });
 
-async function sendNotification(title, body, tag) {
-  if (typeof Notification === "undefined" ||
-      !("serviceWorker" in navigator) ||
-      Notification.permission !== "granted") return;
-  try {
-    const reg = await navigator.serviceWorker.ready;
-    await reg.showNotification(title, { body, tag });
-  } catch (err) {
-    console.error("Notification failed:", err);
-  }
+if ("serviceWorker" in navigator) {
+  navigator.serviceWorker.register("sw.js").catch((err) => {
+    console.error("Service worker registration failed:", err);
+  });
 }
 
+banner.addEventListener("click", () => { banner.hidden = true; });
+setInterval(checkAlerts, CHECK_EVERY_MS);
+checkAlerts();
 updateNotifStatus();
+
+
+// TEMP DEBUG - delete before deploying
+window.dbg = () => {
+  const now = new Date();
+  console.log("now:", now.toString(), "| LEAD_MINUTES:", LEAD_MINUTES, "| lectures:", lectures.length);
+  for (const l of lectures) {
+    const s = getNextOccurrence(l, now);
+    console.log(
+      l.course,
+      "| day:", l.day, typeof l.day,
+      "| time:", l.time,
+      "| next start:", s && s.toString(),
+      "| alert at:", s && new Date(s.getTime() - LEAD_MINUTES * 60000).toTimeString(),
+      "| already fired:", s && fired.has(`${l.id}|${s.getTime()}`)
+    );
+  }
+  console.log("fired set:", [...fired]);
+};

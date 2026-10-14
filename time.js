@@ -1,5 +1,5 @@
 // Returns the Date of the lecture's next start, or null if the data is bad.
-function getNextOccurrence(lecture, now = new Date()) {
+export function getNextOccurrence(lecture, now = new Date()) {
   // --- Validate the stored data (never trust localStorage) ---
   if (typeof lecture.time !== "string") return null;
   const parts = lecture.time.split(":");
