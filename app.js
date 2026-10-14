@@ -256,3 +256,25 @@ window.dbg = () => {
   }
   console.log("fired set:", [...fired]);
 };
+
+// ===== View switching =====
+const navButtons = document.querySelectorAll("[data-view]");
+const views = document.querySelectorAll(".view");
+const knownViews = [...views].map((v) => v.id.replace("view-", ""));
+
+function showView(name) {
+  for (const view of views) {
+    view.hidden = view.id !== `view-${name}`;
+  }
+  for (const btn of navButtons) {
+    btn.classList.toggle("active", btn.dataset.view === name);
+  }
+  localStorage.setItem("lastView", name);
+}
+
+for (const btn of navButtons) {
+  btn.addEventListener("click", () => showView(btn.dataset.view));
+}
+
+const savedView = localStorage.getItem("lastView");
+showView(knownViews.includes(savedView) ? savedView : "schedule");

@@ -7,49 +7,70 @@
   <link rel="stylesheet" href="style.css">
 </head>
 <body>
-  <h1>Lecture Alert</h1>
-  <button id="enable-notifications" type="button">Enable notifications</button>
-  <p id="notif-status"></p>
-  <p id="notif-status"></p>
+  <div class="app">
 
-  <div id="alert-banner" hidden></div>
+    <nav class="sidebar">
+      <h1>Lecture Alert</h1>
+      <button class="nav-btn" data-view="upcoming" type="button">⏰ Upcoming</button>
+      <button class="nav-btn" data-view="schedule" type="button">🗓️ Schedule</button>
+      <button class="nav-btn" data-view="settings" type="button">⚙️ Settings</button>
+    </nav>
 
-  <form id="lecture-form">
-    <label for="course">Course</label>
-    <input id="course" type="text" required>
+    <main class="content">
+      <div id="alert-banner" hidden></div>
 
-    <label for="day">Day</label>
-    <select id="day">
-      <option value="0">Sunday</option>
-      <option value="1">Monday</option>
-      <option value="2">Tuesday</option>
-      <option value="3">Wednesday</option>
-      <option value="4">Thursday</option>
-      <option value="5">Friday</option>
-      <option value="6">Saturday</option>
-    </select>
+      <section id="view-upcoming" class="view" hidden>
+        <h2>Upcoming</h2>
+        <p>Your next lectures will show here.</p>
+      </section>
 
-    <label for="time">Start time</label>
-    <input id="time" type="time" required>
+      <section id="view-schedule" class="view">
+        <form id="lecture-form" novalidate>
+          <label for="course">Course</label>
+          <input id="course" type="text" autocomplete="off">
 
-    <label for="hall">Hall</label>
-    <select id="hall" name="hall">
-    <option value="">Select hall</option>
-    </select>
+          <label for="day">Day</label>
+          <select id="day">
+            <option value="0">Sunday</option>
+            <option value="1">Monday</option>
+            <option value="2">Tuesday</option>
+            <option value="3">Wednesday</option>
+            <option value="4">Thursday</option>
+            <option value="5">Friday</option>
+            <option value="6">Saturday</option>
+          </select>
 
-    <label for="room">Room</label>
-    <input id="room" type="text">
+          <label for="time">Start time</label>
+          <input id="time" type="time">
 
-    <button type="submit">Add lecture</button>
-  </form>
+          <label for="hall">Hall</label>
+          <select id="hall">
+            <option value="">Select hall</option>
+          </select>
 
-  <h2>My lectures</h2>
-  <ul id="lecture-list"></ul>
-  <br></br>
-  <button id="clear-all" type="button">Clear all lectures</button>
+          <label for="room">Room</label>
+          <input id="room" type="text" autocomplete="off">
 
- <script type="module" src="app.js"></script>
- <script type="module" src="time.test.js"></script>
+          <p id="form-error" class="form-error" hidden></p>
+          <button type="submit">Add lecture</button>
+        </form>
 
+        <h2>My lectures</h2>
+        <ul id="lecture-list"></ul>
+        <br><br/>
+        <button id="clear-all" type="button">Clear all lectures</button>
+      </section>
+
+      <section id="view-settings" class="view" hidden>
+        <h2>Settings</h2>
+        <button id="enable-notifications" type="button">Enable notifications</button>
+        <p id="notif-status"></p>
+      </section>
+    </main>
+
+  </div>
+
+  <script type="module" src="app.js"></script>
+  <script type="module" src="time.test.js"></script>
 </body>
 </html>
