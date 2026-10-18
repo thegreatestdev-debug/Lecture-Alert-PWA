@@ -21,13 +21,17 @@
 
       <section id="view-upcoming" class="view" hidden>
         <h2>Upcoming</h2>
-        <p>Your next lectures will show here.</p>
+        <div id="next-card" class="next-card" hidden></div>
+        <ul id="upcoming-list"></ul>
+        <p id="upcoming-empty" class="muted" hidden>No lectures yet. Add one in Schedule.</p>
       </section>
 
       <section id="view-schedule" class="view">
         <form id="lecture-form" novalidate>
           <label for="course">Course</label>
           <input id="course" type="text" autocomplete="off">
+
+
 
           <label for="day">Day</label>
           <select id="day">
@@ -57,7 +61,6 @@
 
         <h2>My lectures</h2>
         <ul id="lecture-list"></ul>
-        <br><br/>
         <button id="clear-all" type="button">Clear all lectures</button>
       </section>
 

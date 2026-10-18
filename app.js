@@ -257,18 +257,99 @@ window.dbg = () => {
   console.log("fired set:", [...fired]);
 };
 
+// ===== Upcoming view =====
+const upcomingView = document.getElementById("view-upcoming");
+const nextCard = document.getElementById("next-card");
+const upcomingList = document.getElementById("upcoming-list");
+const upcomingEmpty = document.getElementById("upcoming-empty");
+// days and hours when far away and when closer
+function formatCountdown(ms) {
+  const totalSeconds = Math.max(0, Math.floor(ms / 1000));
+  const days = Math.floor(totalSeconds / 86400);
+  const hours = Math.floor((totalSeconds % 86400) / 3600);
+  const minutes = Math.floor((totalSeconds % 3600) / 60);
+  const seconds = totalSeconds % 60;
+
+  if (days > 0) return `${days}d ${hours}h`;
+  if (hours > 0) return `${hours}h ${minutes}m`;
+  return `${minutes}m ${seconds}s`;
+}
+// comlpares days
+function dayLabel(start, now) {
+  const startDay = new Date(start.getFullYear(), start.getMonth(), start.getDate());
+  const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+  const diff = Math.round((startDay - today) / 86400000);
+  if (diff === 0) return "Today";
+  if (diff === 1) return "Tomorrow";
+  return DAY_NAMES[start.getDay()];
+}
+
+function hallLabel(lecture) {
+  const hall = HALLS.find((h) => h.id === lecture.hall);
+  return hall ? hall.name : "Unknown hall";
+}
+
+function getUpcoming(now) {
+  return lectures
+    .map((lecture) => ({ lecture, start: getNextOccurrence(lecture, now) }))
+    .filter((item) => item.start !== null)
+    .sort((a, b) => a.start - b.start);
+}
+
+function renderUpcoming() {
+  if (upcomingView.hidden) return;
+
+  const now = new Date();
+  const items = getUpcoming(now);
+
+  nextCard.replaceChildren();
+  upcomingList.replaceChildren();
+  nextCard.hidden = items.length === 0;
+  upcomingEmpty.hidden = items.length > 0;
+  if (items.length === 0) return;
+
+  const [first, ...rest] = items;
+
+  const title = document.createElement("div");
+  title.className = "next-title";
+  title.textContent = first.lecture.course;
+
+  const count = document.createElement("div");
+  count.className = "next-count";
+  count.textContent = formatCountdown(first.start - now);
+
+  const meta = document.createElement("div");
+  meta.className = "next-meta";
+  meta.textContent =
+    `${dayLabel(first.start, now)} ${first.start.toTimeString().slice(0, 5)} - ` +
+    `${hallLabel(first.lecture)}, Room ${first.lecture.room || "n/a"}`;
+
+  nextCard.append(title, count, meta);
+
+  for (const item of rest.slice(0, 6)) {
+    const li = document.createElement("li");
+    li.textContent =
+      `${item.lecture.course} - ${dayLabel(item.start, now)} ` +
+      `${item.start.toTimeString().slice(0, 5)} - in ${formatCountdown(item.start - now)}`;
+    upcomingList.appendChild(li);
+  }
+}
+
+setInterval(renderUpcoming, 1000);
+
 // ===== View switching =====
 const navButtons = document.querySelectorAll("[data-view]");
 const views = document.querySelectorAll(".view");
 const knownViews = [...views].map((v) => v.id.replace("view-", ""));
 
 function showView(name) {
-  for (const view of views) {
-    view.hidden = view.id !== `view-${name}`;
+  for (const View of views) {
+    View.hidden = View.id !== `View-${name}`;
   }
   for (const btn of navButtons) {
     btn.classList.toggle("active", btn.dataset.view === name);
   }
+  renderUpcoming();
   localStorage.setItem("lastView", name);
 }
 
@@ -277,4 +358,4 @@ for (const btn of navButtons) {
 }
 
 const savedView = localStorage.getItem("lastView");
-showView(knownViews.includes(savedView) ? savedView : "schedule");
+showView(knownViews.includes(savedView) ? savedView : "Upcoming");
