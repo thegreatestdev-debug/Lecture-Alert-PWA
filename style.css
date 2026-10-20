@@ -177,5 +177,37 @@ button:hover { filter: brightness(1.1); }
   border-left: 4px solid var(--accent-2);
   border-radius: var(--radius);
 }
-
 .muted { color: var(--muted); }
+
+
+:root { color-scheme: dark; }
+
+:root[data-theme="light"] {
+  color-scheme: light;
+  --bg: #f5f5ff;
+  --surface: #ffffff;
+  --surface-2: #ececff;
+  --text: #15152b;
+  --muted: #5a5d86;
+}
+
+.setting { margin-bottom: 22px; }
+
+.setting-label {
+  display: block;
+  margin-bottom: 8px;
+  font-size: 0.85rem;
+  color: var(--muted);
+}
+
+.swatches { display: flex; gap: 12px; }
+
+.swatch {
+  width: 40px;
+  height: 40px;
+  padding: 0;
+  border-radius: 50%;
+  border: 3px solid transparent;
+}
+
+.swatch.selected { border-color: var(--text); }

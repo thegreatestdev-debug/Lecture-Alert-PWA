@@ -63,10 +63,32 @@
       </section>
 
       <section id="view-settings" class="view" hidden>
-        <h2>Settings</h2>
-        <button id="enable-notifications" type="button">Enable notifications</button>
-        <p id="notif-status"></p>
-      </section>
+  <h2>Settings</h2>
+
+  <div class="setting">
+    <label for="lead-minutes">Alert me this many minutes before a lecture</label>
+    <input id="lead-minutes" type="number" min="1" max="120" step="1">
+  </div>
+
+  <div class="setting">
+    <label for="theme-select">Theme</label>
+    <select id="theme-select">
+      <option value="dark">Dark</option>
+      <option value="light">Light</option>
+    </select>
+    </div>
+
+    <div class="setting">
+    <span class="setting-label">Accent colour</span>
+    <div id="accent-picker" class="swatches"></div>
+    </div>
+
+    <div class="setting">
+    <button id="enable-notifications" type="button">Enable notifications</button>
+    <p id="notif-status"></p>
+    </div>
+       </section>
+
     </main>
 
   </div>

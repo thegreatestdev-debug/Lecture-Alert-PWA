@@ -101,8 +101,95 @@ clearBtn.addEventListener("click", () => {
 fillHallSelect();
 render();
 
-// ===== Alerts and notifications =====
-const LEAD_MINUTES = 1;            // demo value; becomes a setting in M6d
+// ===== Settings =====
+const SETTINGS_KEY = "settings";
+
+const ACCENTS = {
+  violet: { accent: "#8b5cf6", accent2: "#22d3ee" },
+  pink:   { accent: "#ec4899", accent2: "#f59e0b" },
+  green:  { accent: "#22c55e", accent2: "#06b6d4" },
+  orange: { accent: "#f97316", accent2: "#eab308" }
+};
+const THEMES = ["dark", "light"];
+const DEFAULT_SETTINGS = { leadMinutes: 10, theme: "dark", accent: "violet" };
+
+function loadSettings() {
+  try {
+    const raw = JSON.parse(localStorage.getItem(SETTINGS_KEY));
+    const lead = Number(raw && raw.leadMinutes);
+    return {
+      leadMinutes: Number.isInteger(lead) && lead >= 1 && lead <= 120
+        ? lead : DEFAULT_SETTINGS.leadMinutes,
+      theme: raw && THEMES.includes(raw.theme) ? raw.theme : DEFAULT_SETTINGS.theme,
+      accent: raw && Object.keys(ACCENTS).includes(raw.accent) ? raw.accent : DEFAULT_SETTINGS.accent
+    };
+  } catch (err) {
+    return { ...DEFAULT_SETTINGS };
+  }
+}
+
+let settings = loadSettings();
+
+function saveSettings() {
+  localStorage.setItem(SETTINGS_KEY, JSON.stringify(settings));
+}
+
+function applySettings() {
+  const root = document.documentElement;
+  root.dataset.theme = settings.theme;
+  root.style.setProperty("--accent", ACCENTS[settings.accent].accent);
+  root.style.setProperty("--accent-2", ACCENTS[settings.accent].accent2);
+}
+
+const leadInput = document.getElementById("lead-minutes");
+const themeSelect = document.getElementById("theme-select");
+const accentPicker = document.getElementById("accent-picker");
+
+function buildAccentPicker() {
+  accentPicker.replaceChildren();
+  for (const [name, colors] of Object.entries(ACCENTS)) {
+    const btn = document.createElement("button");
+    btn.type = "button";
+    btn.className = "swatch";
+    btn.title = name;
+    btn.setAttribute("aria-label", `${name} accent`);
+    btn.style.background = `linear-gradient(135deg, ${colors.accent}, ${colors.accent2})`;
+    btn.classList.toggle("selected", name === settings.accent);
+    btn.addEventListener("click", () => {
+      settings.accent = name;
+      saveSettings();
+      applySettings();
+      buildAccentPicker();
+    });
+    accentPicker.appendChild(btn);
+  }
+}
+
+leadInput.value = settings.leadMinutes;
+themeSelect.value = settings.theme;
+
+leadInput.addEventListener("change", () => {
+  const value = Number(leadInput.value);
+  if (Number.isInteger(value) && value >= 1 && value <= 120) {
+    settings.leadMinutes = value;
+    saveSettings();
+  } else {
+    leadInput.value = settings.leadMinutes;
+  }
+});
+
+themeSelect.addEventListener("change", () => {
+  if (THEMES.includes(themeSelect.value)) {
+    settings.theme = themeSelect.value;
+    saveSettings();
+    applySettings();
+  }
+});
+
+applySettings();
+buildAccentPicker();
+
+// ===== Alerts and notifications =====    
 const CHECK_EVERY_MS = 1000;
 const FIRED_KEY = "firedAlerts";
 
@@ -158,7 +245,7 @@ function checkAlerts() {
     const start = getNextOccurrence(lecture, now);
     if (start === null) continue;
 
-    const alertAt = new Date(start.getTime() - LEAD_MINUTES * 60 * 1000);
+    const alertAt = new Date(start.getTime() - settings.leadMinutes * 60 * 1000);
     const key = `${lecture.id}|${start.getTime()}`;
 
     if (now >= alertAt && !fired.has(key)) {
