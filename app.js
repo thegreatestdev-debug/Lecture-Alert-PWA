@@ -2,151 +2,113 @@ import { getNextOccurrence } from "./time.js";
 
 console.log("app.js loaded");
 
-// ─────────────────────────────────────────────
-// HALLS — replace with your real campus halls
-// ─────────────────────────────────────────────
-const HALLS = [
-  { id: "auditorium", name: "Main Auditorium" },
-  { id: "hallA",      name: "SW" },
-  { id: "hallB",      name: "NLT" },
-  { id: "hallC",      name: "CALC" },
-  { id: "lawhall",    name: "Law Hall" },
-];
-
-// ─────────────────────────────────────────────
-// Populate the <select id="hall"> with HALLS
-// ─────────────────────────────────────────────
-function populateHallSelect() {
-  const select = document.getElementById("hall");
-  if (!select) return;
-
-  for (const hall of HALLS) {
-    const option = document.createElement("option");
-    option.value = hall.id;
-    option.textContent = hall.name;
-    select.appendChild(option);
-  }
-}
-
-// ─────────────────────────────────────────────
-// Constants
-// ─────────────────────────────────────────────
+// ===== Constants =====
 const STORAGE_KEY = "lectures";
-const DAY_NAMES = [
-  "Sunday", "Monday", "Tuesday", "Wednesday",
-  "Thursday", "Friday", "Saturday",
+const DAY_NAMES = ["Sunday", "Monday", "Tuesday", "Wednesday",
+                   "Thursday", "Friday", "Saturday"];
+
+// >>> Replace this list with YOUR real halls. Keep the same ids you used before. <<<
+const HALLS = [
+  { id: "hallA", name: "SW" },
+  { id: "hallB", name: "NLT" },
+  { id: "hallC", name: "CALC" }
 ];
 
-// ─────────────────────────────────────────────
-// Element references
-// ─────────────────────────────────────────────
-const form   = document.getElementById("lecture-form");
+// ===== Page elements =====
+const form = document.getElementById("lecture-form");
 const listEl = document.getElementById("lecture-list");
+const hallSelect = document.getElementById("hall");
+const formError = document.getElementById("form-error");
+const clearBtn = document.getElementById("clear-all");
 
-// ─────────────────────────────────────────────
-// Storage
-// ─────────────────────────────────────────────
+// ===== Storage =====
 function loadLectures() {
   try {
     const raw = localStorage.getItem(STORAGE_KEY);
-    return raw ? JSON.parse(raw) : [];
+    const parsed = raw ? JSON.parse(raw) : [];
+    return Array.isArray(parsed) ? parsed : [];
   } catch (err) {
     console.error("Could not read saved lectures:", err);
     return [];
   }
 }
 
-function saveLectures(lectures) {
-  localStorage.setItem(STORAGE_KEY, JSON.stringify(lectures));
+function saveLectures(list) {
+  localStorage.setItem(STORAGE_KEY, JSON.stringify(list));
 }
 
 let lectures = loadLectures();
 
-// ─────────────────────────────────────────────
-// Render — loops over all lectures
-// ─────────────────────────────────────────────
+// ===== Helpers =====
+function hallLabel(lecture) {
+  const hall = HALLS.find((h) => h.id === lecture.hall);
+  return hall ? hall.name : "Unknown hall";
+}
+
+// ===== Schedule view: hall list, lecture list, form, clear =====
+function fillHallSelect() {
+  for (const hall of HALLS) {
+    const option = document.createElement("option");
+    option.value = hall.id;
+    option.textContent = hall.name;
+    hallSelect.appendChild(option);
+  }
+}
+
 function render() {
   listEl.replaceChildren();
-
   for (const lecture of lectures) {
     const li = document.createElement("li");
-
-    // Look up the hall's display name by its stored id
-    const hall = HALLS.find(h => h.id === lecture.hall);
-    const hallName = hall ? hall.name : "Unknown hall";
-
     li.textContent =
-      `${lecture.course} - ${DAY_NAMES[lecture.day]} ${lecture.time}` +
-      ` - ${hallName} - Room ${lecture.room}`;
-
+      `${lecture.course} - ${DAY_NAMES[lecture.day]} ${lecture.time} - ` +
+      `${hallLabel(lecture)} - Room ${lecture.room || "n/a"}`;
     listEl.appendChild(li);
   }
 }
 
-// ─────────────────────────────────────────────
-// Submit handler
-// ─────────────────────────────────────────────
+function showFormError(message) {
+  formError.textContent = message;
+  formError.hidden = false;
+}
+
 form.addEventListener("submit", (event) => {
   event.preventDefault();
+  formError.hidden = true;
 
   const course = document.getElementById("course").value.trim();
-  const day    = Number(document.getElementById("day").value);
-  const time   = document.getElementById("time").value;
-  const room   = document.getElementById("room").value.trim();
-  const hall   = document.getElementById("hall").value;
+  const day = Number(document.getElementById("day").value);
+  const time = document.getElementById("time").value;
+  const hall = document.getElementById("hall").value;
+  const room = document.getElementById("room").value.trim();
 
-  // Reject if hall not chosen
-  if (hall === "") {
-    alert("Please select a lecture hall.");
-    return;
-  }
+  if (course === "") return showFormError("Enter a course name.");
+  if (time === "") return showFormError("Pick a start time.");
+  if (!HALLS.some((h) => h.id === hall)) return showFormError("Select a hall.");
 
-  // Reject if required fields are empty
-  if (course === "" || time === "") {
-    return;
-  }
-
-  lectures.push({
-    id: crypto.randomUUID(),
-    course,
-    day,
-    time,
-    hall,
-    room,
-  });
-
+  lectures.push({ id: crypto.randomUUID(), course, day, time, hall, room });
   saveLectures(lectures);
   render();
   form.reset();
 });
 
-
-// ─────────────────────────────────────────────
-// Clear all lectures button (single listener, once)
-// ─────────────────────────────────────────────
-document.getElementById("clear-all").addEventListener("click", () => {
+clearBtn.addEventListener("click", () => {
   if (!confirm("Delete all lectures?")) return;
   lectures = [];
   saveLectures(lectures);
   render();
 });
 
-// ─────────────────────────────────────────────
-// Startup
-// ─────────────────────────────────────────────
-populateHallSelect();
+fillHallSelect();
 render();
+
 // ===== Alerts and notifications =====
-const LEAD_MINUTES = 1;            // demo value; raise it later
+const LEAD_MINUTES = 1;            // demo value; becomes a setting in M6d
 const CHECK_EVERY_MS = 1000;
 const FIRED_KEY = "firedAlerts";
 
 const banner = document.getElementById("alert-banner");
 const enableBtn = document.getElementById("enable-notifications");
 const notifStatus = document.getElementById("notif-status");
-const lecture = document.getElementById("lecture-form");
-const list = document.getElementById("lecture-list");
-
 
 function loadFired() {
   try {
@@ -176,15 +138,18 @@ async function sendNotification(title, body, tag) {
 }
 
 function showAlert(lecture, start, key) {
-  const hall = HALLS.find((h) => h.id === lecture.hall);
-  const hallName = hall ? hall.name : "Unknown hall";
   const mins = Math.max(1, Math.round((start - new Date()) / 60000));
   const room = lecture.room || "n/a";
 
-  banner.textContent = `${lecture.course} starts in ${mins} min - ${hallName}, Room ${room}`;
+  banner.textContent =
+    `${lecture.course} starts in ${mins} min - ${hallLabel(lecture)}, Room ${room}`;
   banner.hidden = false;
 
-  sendNotification(`${lecture.course} starts in ${mins} min`, `${hallName}, Room ${room}`, key);
+  sendNotification(
+    `${lecture.course} starts in ${mins} min`,
+    `${hallLabel(lecture)}, Room ${room}`,
+    key
+  );
 }
 
 function checkAlerts() {
@@ -238,31 +203,12 @@ setInterval(checkAlerts, CHECK_EVERY_MS);
 checkAlerts();
 updateNotifStatus();
 
-
-// TEMP DEBUG - delete before deploying
-window.dbg = () => {
-  const now = new Date();
-  console.log("now:", now.toString(), "| LEAD_MINUTES:", LEAD_MINUTES, "| lectures:", lectures.length);
-  for (const l of lectures) {
-    const s = getNextOccurrence(l, now);
-    console.log(
-      l.course,
-      "| day:", l.day, typeof l.day,
-      "| time:", l.time,
-      "| next start:", s && s.toString(),
-      "| alert at:", s && new Date(s.getTime() - LEAD_MINUTES * 60000).toTimeString(),
-      "| already fired:", s && fired.has(`${l.id}|${s.getTime()}`)
-    );
-  }
-  console.log("fired set:", [...fired]);
-};
-
 // ===== Upcoming view =====
 const upcomingView = document.getElementById("view-upcoming");
 const nextCard = document.getElementById("next-card");
 const upcomingList = document.getElementById("upcoming-list");
 const upcomingEmpty = document.getElementById("upcoming-empty");
-// days and hours when far away and when closer
+
 function formatCountdown(ms) {
   const totalSeconds = Math.max(0, Math.floor(ms / 1000));
   const days = Math.floor(totalSeconds / 86400);
@@ -274,7 +220,7 @@ function formatCountdown(ms) {
   if (hours > 0) return `${hours}h ${minutes}m`;
   return `${minutes}m ${seconds}s`;
 }
-// comlpares days
+
 function dayLabel(start, now) {
   const startDay = new Date(start.getFullYear(), start.getMonth(), start.getDate());
   const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
@@ -282,11 +228,6 @@ function dayLabel(start, now) {
   if (diff === 0) return "Today";
   if (diff === 1) return "Tomorrow";
   return DAY_NAMES[start.getDay()];
-}
-
-function hallLabel(lecture) {
-  const hall = HALLS.find((h) => h.id === lecture.hall);
-  return hall ? hall.name : "Unknown hall";
 }
 
 function getUpcoming(now) {
@@ -343,8 +284,8 @@ const views = document.querySelectorAll(".view");
 const knownViews = [...views].map((v) => v.id.replace("view-", ""));
 
 function showView(name) {
-  for (const View of views) {
-    View.hidden = View.id !== `View-${name}`;
+  for (const view of views) {
+    view.hidden = view.id !== `view-${name}`;
   }
   for (const btn of navButtons) {
     btn.classList.toggle("active", btn.dataset.view === name);
@@ -358,4 +299,4 @@ for (const btn of navButtons) {
 }
 
 const savedView = localStorage.getItem("lastView");
-showView(knownViews.includes(savedView) ? savedView : "Upcoming");
+showView(knownViews.includes(savedView) ? savedView : "upcoming");
